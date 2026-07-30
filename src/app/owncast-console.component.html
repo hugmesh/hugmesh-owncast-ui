@@ -1,0 +1,31 @@
+<header class="owncast-head">
+  <h1>Owncast</h1>
+  <p class="owncast-head__sub" id="owncast-console-help">
+    Manage live streaming: control your own stream, govern who may broadcast, and moderate streams.
+  </p>
+
+  @if (visibleItems().length > 0) {
+    <nav class="owncast-nav" role="menubar" aria-label="Owncast console" aria-describedby="owncast-console-help">
+      @for (item of visibleItems(); track item.path; let i = $index) {
+        <a
+          #navlink
+          role="menuitem"
+          class="owncast-nav__item"
+          [routerLink]="['./', item.path]"
+          routerLinkActive="owncast-nav__item--active"
+          ariaCurrentWhenActive="page"
+          [attr.aria-label]="item.aria"
+          [attr.aria-describedby]="'owncast-nav-help-' + item.path"
+          [attr.tabindex]="tabindexFor(i)"
+          (keydown)="onKey($event, i)"
+          [attr.data-testid]="'owncast-nav-' + item.path"
+        >
+          {{ item.label }}
+        </a>
+        <span class="sr" [id]="'owncast-nav-help-' + item.path">{{ item.help }}</span>
+      }
+    </nav>
+  }
+</header>
+
+<router-outlet></router-outlet>

@@ -1,0 +1,18 @@
+<section class="owncast-forbidden owncast-panel" role="alert" aria-labelledby="owncast-forbidden-title">
+  <h2 id="owncast-forbidden-title" data-testid="owncast-forbidden-title">You don't have access to this view</h2>
+  <p>
+    Your role doesn't include permission for this part of the owncast console.
+    The "My Stream" console requires the owncast streamer role; the Broadcast
+    Grants console requires the admin or superadmin role; the moderation view
+    requires the mod, admin or superadmin role. If you need access, ask an
+    administrator.
+  </p>
+  <div class="owncast-forbidden__actions">
+    @if (canStream()) {
+      <a routerLink="../stream" class="owncast-btn" data-testid="owncast-forbidden-stream">Go to my stream</a>
+    }
+    @if (canModerate()) {
+      <a routerLink="../moderation" class="owncast-btn owncast-btn--secondary" data-testid="owncast-forbidden-moderation">Moderation</a>
+    }
+  </div>
+</section>

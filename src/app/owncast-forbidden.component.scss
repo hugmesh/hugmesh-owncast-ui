@@ -1,0 +1,20 @@
+@use 'controls';
+
+.owncast-forbidden {
+  max-width: 40rem;
+
+  h2 {
+    margin-top: 0;
+  }
+
+  p {
+    color: var(--owncast-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}

@@ -1,0 +1,237 @@
+<div class="owncast-grants">
+  <h2 id="owncast-grants-title" data-testid="owncast-grants-title">Broadcast grants</h2>
+  <p class="owncast-muted" id="owncast-grants-help">
+    Grant a user broadcast access, time them out, ban them, or restore access.
+    This gates whether a user's stream may go public. Broadcast is default-deny —
+    a grant is the only thing that confers it. Changes are domain-scoped to your
+    brand and recorded for audit.
+  </p>
+
+  <!-- ── Action form (ADMIN | SUPERADMIN) ── -->
+  <form (ngSubmit)="submit()" novalidate aria-labelledby="owncast-grants-title" aria-describedby="owncast-grants-help" class="owncast-grants__form owncast-panel">
+    <fieldset class="owncast-grants__fieldset">
+      <legend>Action</legend>
+      <div class="owncast-grants__actions" role="radiogroup" aria-label="Broadcast access action">
+        @for (a of actions; track a.value) {
+          <label class="owncast-grants__radio">
+            <input
+              type="radio"
+              name="action"
+              [value]="a.value"
+              [checked]="action() === a.value"
+              (change)="setAction(a.value)"
+              [attr.data-testid]="'owncast-grants-action-' + a.value"
+              [attr.aria-describedby]="'owncast-grants-help-' + a.value"
+            />
+            <span>{{ a.label }}</span>
+          </label>
+          <span class="sr" [id]="'owncast-grants-help-' + a.value">{{ a.help }}</span>
+        }
+      </div>
+      <p class="owncast-field__help" data-testid="owncast-grants-action-help">
+        {{ actionHelp() }}
+      </p>
+    </fieldset>
+
+    <div class="owncast-field">
+      <label for="owncast-grants-user">User subject</label>
+      <input
+        id="owncast-grants-user"
+        name="userSubject"
+        [ngModel]="userSubject()"
+        (ngModelChange)="userSubject.set($event)"
+        data-testid="owncast-grants-user"
+        aria-describedby="owncast-grants-user-help owncast-grants-user-err"
+        [attr.aria-invalid]="userInvalid()"
+        autocomplete="off"
+      />
+      <p class="owncast-field__help" id="owncast-grants-user-help">
+        The user's stable Casdoor subject (e.g. <code>google:alice&#64;gmail.com</code>).
+      </p>
+      @if (userInvalid()) {
+        <p class="owncast-error" id="owncast-grants-user-err" role="alert">A user subject is required.</p>
+      }
+    </div>
+
+    @if (action() === 'timeout') {
+      <div class="owncast-field">
+        <label for="owncast-grants-ttl">Timeout duration (hours)</label>
+        <input
+          id="owncast-grants-ttl"
+          name="timeoutHours"
+          type="number"
+          min="1"
+          [ngModel]="timeoutHours()"
+          (ngModelChange)="timeoutHours.set(+$event)"
+          data-testid="owncast-grants-ttl"
+          aria-describedby="owncast-grants-ttl-help owncast-grants-ttl-err"
+          [attr.aria-invalid]="ttlInvalid()"
+        />
+        <p class="owncast-field__help" id="owncast-grants-ttl-help">
+          How long the timeout lasts. Broadcast access auto-restores when it expires.
+        </p>
+        @if (ttlInvalid()) {
+          <p class="owncast-error" id="owncast-grants-ttl-err" role="alert">Enter a positive number of hours.</p>
+        }
+      </div>
+    }
+
+    <div class="owncast-field">
+      <label for="owncast-grants-reason">Reason (optional)</label>
+      <input
+        id="owncast-grants-reason"
+        name="reason"
+        [ngModel]="reason()"
+        (ngModelChange)="reason.set($event)"
+        data-testid="owncast-grants-reason"
+        aria-describedby="owncast-grants-reason-help"
+        autocomplete="off"
+      />
+      <p class="owncast-field__help" id="owncast-grants-reason-help">A short note recorded with the change for audit.</p>
+    </div>
+
+    @if (action() === 'ban') {
+      <p class="owncast-warning" role="note" data-testid="owncast-grants-ban-note">
+        A ban takes precedence: it blocks the user from broadcast even if they
+        hold an active grant. Use "Restore" below (or have a superadmin lift it)
+        to restore broadcast later.
+      </p>
+    }
+
+    <div class="owncast-grants__submit">
+      <button type="submit" class="owncast-btn" [disabled]="busy()" data-testid="owncast-grants-submit">
+        {{ busy() ? 'Applying…' : 'Apply' }}
+      </button>
+    </div>
+  </form>
+
+  @if (notice()) {
+    <p class="owncast-success" role="status" data-testid="owncast-grants-notice">{{ notice() }}</p>
+  }
+  @if (error()) {
+    <p class="owncast-error" role="alert" data-testid="owncast-grants-error">{{ error() }}</p>
+  }
+
+  @if (result(); as r) {
+    <section class="owncast-grants__result owncast-panel" role="status" aria-label="Broadcast change result" data-testid="owncast-grants-result">
+      <h3>Applied</h3>
+      <dl>
+        <dt>User</dt><dd>{{ r.userSubject }}</dd>
+        <dt>Type</dt><dd>{{ r.accessType }}</dd>
+        <dt>State</dt><dd>{{ r.state }}</dd>
+        <dt>Expires</dt><dd>{{ r.expiresAt ? (r.expiresAt | date: 'medium') : 'never (permanent)' }}</dd>
+        @if (r.reason) { <dt>Reason</dt><dd>{{ r.reason }}</dd> }
+      </dl>
+      <div class="owncast-grants__result-actions">
+        @if (r.accessType === 'banned' && r.state === 'active') {
+          <button type="button" class="owncast-btn owncast-btn--secondary" (click)="restore(r.userSubject)" data-testid="owncast-grants-restore">
+            Restore (lift ban)
+          </button>
+        }
+        @if (r.accessType === 'broadcast' && r.state === 'active') {
+          <button type="button" class="owncast-btn owncast-btn--danger" (click)="removeGrant(r.userSubject)" data-testid="owncast-grants-remove">
+            Remove grant
+          </button>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ── Active grants list (SUPERADMIN only — the bff /superadmin/** read) ── -->
+  @if (canManageAll()) {
+    <section class="owncast-grants__active owncast-panel" aria-labelledby="owncast-grants-active-title" data-testid="owncast-grants-active-panel">
+      <div class="owncast-grants__active-head">
+        <h3 id="owncast-grants-active-title">Active broadcast grants</h3>
+        <button type="button" class="owncast-btn owncast-btn--secondary" (click)="reloadActive()" data-testid="owncast-grants-active-reload">Refresh</button>
+      </div>
+
+      @if (activeLoading()) {
+        <p role="status" data-testid="owncast-grants-active-loading">Loading active grants…</p>
+      } @else if (activeError()) {
+        <p class="owncast-error" role="alert" data-testid="owncast-grants-active-error">{{ activeError() }}</p>
+      } @else if (active().length === 0) {
+        <p class="owncast-muted" data-testid="owncast-grants-active-empty">No active broadcast grants in your brand.</p>
+      } @else {
+        <table class="owncast-grants__table">
+          <caption class="sr">Active broadcast grants</caption>
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Type</th>
+              <th scope="col">Granted by</th>
+              <th scope="col">Reason</th>
+              <th scope="col">Expires</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of active(); track trackGrantId($index, g)) {
+              <tr [attr.data-testid]="'owncast-grants-active-row'">
+                <td>{{ g.userSubject }}</td>
+                <td>{{ g.accessType }}</td>
+                <td>{{ g.grantedBySubject }}</td>
+                <td>{{ g.reason || '—' }}</td>
+                <td>{{ g.expiresAt ? (g.expiresAt | date: 'medium') : 'never' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- ── Per-principal history (SUPERADMIN) ── -->
+    <section class="owncast-grants__history owncast-panel" aria-labelledby="owncast-grants-history-title" data-testid="owncast-grants-history-panel">
+      <h3 id="owncast-grants-history-title">Grant history</h3>
+      <form (ngSubmit)="loadHistory()" novalidate class="owncast-grants__history-form">
+        <div class="owncast-field">
+          <label for="owncast-grants-history-user">User subject</label>
+          <input
+            id="owncast-grants-history-user"
+            name="historyUser"
+            [ngModel]="historyUser()"
+            (ngModelChange)="historyUser.set($event)"
+            data-testid="owncast-grants-history-user"
+            aria-describedby="owncast-grants-history-help"
+            autocomplete="off"
+          />
+          <p class="owncast-field__help" id="owncast-grants-history-help">The full grant/timeout/ban history (active + revoked) for a principal.</p>
+        </div>
+        <button type="submit" class="owncast-btn owncast-btn--secondary" [disabled]="historyLoading()" data-testid="owncast-grants-history-load">
+          {{ historyLoading() ? 'Loading…' : 'Look up history' }}
+        </button>
+      </form>
+
+      @if (historyError()) {
+        <p class="owncast-error" role="alert" data-testid="owncast-grants-history-error">{{ historyError() }}</p>
+      }
+      @if (history(); as h) {
+        @if (h.length === 0) {
+          <p class="owncast-muted" data-testid="owncast-grants-history-empty">No history for this user.</p>
+        } @else {
+          <table class="owncast-grants__table">
+            <caption class="sr">Grant history</caption>
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">State</th>
+                <th scope="col">Granted by</th>
+                <th scope="col">Created</th>
+                <th scope="col">Revoked</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (g of h; track trackGrantId($index, g)) {
+                <tr>
+                  <td>{{ g.accessType }}</td>
+                  <td>{{ g.state }}</td>
+                  <td>{{ g.grantedBySubject }}</td>
+                  <td>{{ g.createdAt ? (g.createdAt | date: 'short') : '—' }}</td>
+                  <td>{{ g.revokedAt ? (g.revokedAt | date: 'short') : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+    </section>
+  }
+</div>

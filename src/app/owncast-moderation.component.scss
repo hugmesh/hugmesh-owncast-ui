@@ -1,0 +1,68 @@
+@use 'controls';
+
+.owncast-moderation {
+  max-width: 56rem;
+  display: grid;
+  gap: 1.25rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+  }
+
+  h3 {
+    margin-top: 0;
+  }
+
+  &__feed {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid var(--owncast-border);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--owncast-text-muted);
+    }
+  }
+
+  &__row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+// The BANNED badge — carries TEXT so it never relies on colour alone.
+.owncast-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--owncast-radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--owncast-border);
+
+  &--banned {
+    color: var(--owncast-error);
+    border-color: var(--owncast-error);
+  }
+}

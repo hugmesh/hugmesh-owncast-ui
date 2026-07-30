@@ -1,0 +1,143 @@
+<div class="owncast-moderation">
+  <h2 id="owncast-moderation-title" data-testid="owncast-moderation-title">Moderation</h2>
+  <p class="owncast-muted" id="owncast-moderation-help">
+    Review streams and act on ones that violate the rules. Hide forces a stream
+    private; Kill bans the streamer from broadcasting until restored. Moderation
+    is domain-scoped to your brand.
+  </p>
+
+  <section class="owncast-moderation__feed owncast-panel" aria-labelledby="owncast-moderation-feed-title" data-testid="owncast-moderation-feed">
+    <div class="owncast-moderation__head">
+      <h3 id="owncast-moderation-feed-title">Streams</h3>
+      <button
+        type="button"
+        class="owncast-btn owncast-btn--secondary"
+        (click)="reload()"
+        [disabled]="loading()"
+        data-testid="owncast-moderation-reload"
+      >
+        Refresh
+      </button>
+    </div>
+
+    @if (notice()) {
+      <p class="owncast-success" role="status" data-testid="owncast-moderation-notice">{{ notice() }}</p>
+    }
+    @if (actionError()) {
+      <p class="owncast-error" role="alert" data-testid="owncast-moderation-action-error">{{ actionError() }}</p>
+    }
+
+    @if (loading()) {
+      <p role="status" data-testid="owncast-moderation-loading">Loading streams…</p>
+    } @else if (loadError()) {
+      <p class="owncast-error" role="alert" data-testid="owncast-moderation-error">{{ loadError() }}</p>
+    } @else if (streams().length === 0) {
+      <p class="owncast-muted" role="status" data-testid="owncast-moderation-empty">
+        There are no streams to review in your brand.
+      </p>
+    } @else {
+      <table class="owncast-moderation__table">
+        <caption class="sr">Streams in your brand</caption>
+        <thead>
+          <tr>
+            <th scope="col">Streamer</th>
+            <th scope="col">Title</th>
+            <th scope="col">Visibility</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of streams(); track trackOwner($index, s)) {
+            <tr data-testid="owncast-moderation-row">
+              <td data-testid="owncast-moderation-owner">{{ s.ownerSubject }}</td>
+              <td>{{ s.title || '—' }}</td>
+              <td data-testid="owncast-moderation-visibility">{{ s.visibility }}</td>
+              <td>
+                @if (s.banned) {
+                  <!-- The BANNED badge has TEXT, not just colour. -->
+                  <span class="owncast-badge owncast-badge--banned" data-testid="owncast-moderation-banned-badge">
+                    Banned
+                  </span>
+                } @else {
+                  <span class="owncast-muted" data-testid="owncast-moderation-ok-badge">Active</span>
+                }
+              </td>
+              <td class="owncast-moderation__row-actions">
+                <!-- HIDE: force internal — enabled only while public. -->
+                @if (s.visibility === 'internal') {
+                  <button
+                    type="button"
+                    class="owncast-btn owncast-btn--secondary"
+                    disabled
+                    [attr.aria-label]="'Hide stream of ' + s.ownerSubject"
+                    [attr.aria-describedby]="'owncast-moderation-hide-help-' + $index"
+                    data-testid="owncast-moderation-hide"
+                  >
+                    Hide
+                  </button>
+                  <span class="owncast-field__help" [id]="'owncast-moderation-hide-help-' + $index" data-testid="owncast-moderation-hide-help">
+                    {{ alreadyPrivateHelp }}
+                  </span>
+                } @else {
+                  <button
+                    type="button"
+                    class="owncast-btn owncast-btn--secondary"
+                    (click)="hide(s)"
+                    [disabled]="busyOwner() === s.ownerSubject"
+                    [attr.aria-label]="'Hide stream of ' + s.ownerSubject"
+                    data-testid="owncast-moderation-hide"
+                  >
+                    Hide
+                  </button>
+                }
+
+                <!-- KILL (ban): confirm-gated — shown while NOT banned. -->
+                @if (!s.banned) {
+                  <button
+                    type="button"
+                    class="owncast-btn owncast-btn--danger"
+                    (click)="kill(s)"
+                    [disabled]="busyOwner() === s.ownerSubject"
+                    [attr.aria-label]="'Kill stream of ' + s.ownerSubject"
+                    data-testid="owncast-moderation-kill"
+                  >
+                    Kill
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="owncast-btn owncast-btn--danger"
+                    disabled
+                    [attr.aria-label]="'Kill stream of ' + s.ownerSubject"
+                    [attr.aria-describedby]="'owncast-moderation-kill-help-' + $index"
+                    data-testid="owncast-moderation-kill"
+                  >
+                    Kill
+                  </button>
+                  <span class="owncast-field__help" [id]="'owncast-moderation-kill-help-' + $index" data-testid="owncast-moderation-kill-help">
+                    {{ alreadyBannedHelp }}
+                  </span>
+                }
+
+                <!-- RESTORE: revoke the ban — shown only while banned. -->
+                @if (s.banned) {
+                  <button
+                    type="button"
+                    class="owncast-btn owncast-btn--secondary"
+                    (click)="restore(s)"
+                    [disabled]="busyOwner() === s.ownerSubject"
+                    [attr.aria-label]="'Restore stream of ' + s.ownerSubject"
+                    data-testid="owncast-moderation-restore"
+                  >
+                    Restore
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</div>

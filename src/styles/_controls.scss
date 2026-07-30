@@ -1,0 +1,116 @@
+// Shared owncast control styles (buttons, helper text, status colours) the
+// per-component sidecar SCSS pull in via `@use 'controls'`. Centralised so the
+// console's affordances stay visually consistent and the WCAG palette tokens
+// are read from ONE place. (src/styles is on the sass includePaths.)
+
+.owncast-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: var(--owncast-radius);
+  background: var(--owncast-accent);
+  color: #ffffff;
+  border: 1px solid var(--owncast-accent);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--owncast-accent-soft);
+    color: #0a0a12;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.owncast-btn--secondary {
+  background: transparent;
+  color: var(--owncast-text);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--owncast-surface);
+    color: var(--owncast-text);
+    border-color: var(--owncast-accent-soft);
+  }
+}
+
+.owncast-btn--danger {
+  background: transparent;
+  color: var(--owncast-error);
+  border-color: var(--owncast-error);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--owncast-error);
+    color: #0a0a12;
+  }
+}
+
+.owncast-muted {
+  color: var(--owncast-text-muted);
+}
+
+.owncast-error {
+  color: var(--owncast-error);
+  font-weight: 600;
+}
+
+.owncast-success {
+  color: var(--owncast-success);
+  font-weight: 600;
+}
+
+.owncast-warning {
+  color: var(--owncast-warning);
+  font-weight: 600;
+}
+
+.owncast-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+
+  > label,
+  > .owncast-field__label {
+    font-weight: 600;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    background: var(--owncast-bg);
+    color: var(--owncast-text);
+    border: 1px solid var(--owncast-border);
+    border-radius: var(--owncast-radius);
+    font: inherit;
+
+    &[aria-invalid='true'] {
+      border-color: var(--owncast-error);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__help {
+    color: var(--owncast-text-muted);
+    font-size: 0.9rem;
+  }
+}
+
+.owncast-panel {
+  background: var(--owncast-surface);
+  border: 1px solid var(--owncast-border);
+  border-radius: var(--owncast-radius);
+  padding: 1.25rem 1.5rem;
+}

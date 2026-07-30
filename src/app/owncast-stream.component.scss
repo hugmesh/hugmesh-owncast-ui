@@ -1,0 +1,77 @@
+@use 'controls';
+
+.owncast-stream {
+  max-width: 48rem;
+  display: grid;
+  gap: 1.25rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+  }
+
+  h3 {
+    margin-top: 0;
+  }
+
+  &__details,
+  &__visibility,
+  &__video {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  &__vis-fieldset {
+    border: 1px solid var(--owncast-border);
+    border-radius: var(--owncast-radius);
+    padding: 0.75rem 1rem;
+    margin: 0;
+
+    legend {
+      font-weight: 600;
+      padding: 0 0.4rem;
+    }
+  }
+
+  &__vis-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__vis-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+  }
+
+  &__public-help {
+    flex-basis: 100%;
+    margin: 0.25rem 0 0;
+  }
+
+  &__player {
+    display: grid;
+    place-items: center;
+    min-height: 12rem;
+    border: 1px dashed var(--owncast-border);
+    border-radius: var(--owncast-radius);
+    background: var(--owncast-bg);
+    padding: 1rem;
+    text-align: center;
+
+    &:has(.owncast-stream__video-el) {
+      padding: 0;
+      overflow: hidden;
+    }
+  }
+
+  &__video-el {
+    width: 100%;
+    max-height: 60vh;
+    display: block;
+    background: #000;
+    border-radius: var(--owncast-radius);
+  }
+}

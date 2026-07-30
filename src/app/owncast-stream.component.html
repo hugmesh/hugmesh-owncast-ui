@@ -1,0 +1,206 @@
+<div class="owncast-stream">
+  <h2 id="owncast-stream-title" data-testid="owncast-stream-title">My Stream</h2>
+  <p class="owncast-muted" id="owncast-stream-help">
+    Control your own stream: edit its title and description, toggle its
+    visibility, and preview it in-platform.
+  </p>
+
+  @if (loading()) {
+    <p role="status" data-testid="owncast-stream-loading">Loading your stream…</p>
+  } @else if (loadError()) {
+    <p class="owncast-error" role="alert" data-testid="owncast-stream-load-error">{{ loadError() }}</p>
+    <button type="button" class="owncast-btn owncast-btn--secondary" (click)="reload()">Retry</button>
+  } @else {
+
+    @if (noStreamYet()) {
+      <p class="owncast-muted" role="status" data-testid="owncast-stream-empty">
+        You don't have a stream yet. Set a title and description below to create one.
+        New streams start <strong>internal</strong> (visible only inside your brand).
+      </p>
+    }
+
+    <!-- ── Details (title + description) ── -->
+    <form (ngSubmit)="save()" novalidate aria-labelledby="owncast-stream-title" aria-describedby="owncast-stream-help" class="owncast-stream__details owncast-panel">
+      <h3>Stream details</h3>
+
+      <div class="owncast-field">
+        <label for="owncast-stream-title-input">Title</label>
+        <input
+          id="owncast-stream-title-input"
+          name="title"
+          [ngModel]="title()"
+          (ngModelChange)="title.set($event)"
+          maxlength="256"
+          data-testid="owncast-stream-title-input"
+          aria-describedby="owncast-stream-title-help"
+          autocomplete="off"
+        />
+        <p class="owncast-field__help" id="owncast-stream-title-help">A short title shown to viewers.</p>
+      </div>
+
+      <div class="owncast-field">
+        <label for="owncast-stream-desc-input">Description</label>
+        <textarea
+          id="owncast-stream-desc-input"
+          name="description"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          maxlength="2048"
+          rows="3"
+          data-testid="owncast-stream-desc-input"
+          aria-describedby="owncast-stream-desc-help"
+        ></textarea>
+        <p class="owncast-field__help" id="owncast-stream-desc-help">What your stream is about.</p>
+      </div>
+
+      <button type="submit" class="owncast-btn" [disabled]="saving()" data-testid="owncast-stream-save">
+        {{ saving() ? 'Saving…' : 'Save details' }}
+      </button>
+
+      @if (saveNotice()) {
+        <p class="owncast-success" role="status" data-testid="owncast-stream-save-notice">{{ saveNotice() }}</p>
+      }
+      @if (saveError()) {
+        <p class="owncast-error" role="alert" data-testid="owncast-stream-save-error">{{ saveError() }}</p>
+      }
+    </form>
+
+    <!-- ── Visibility ── -->
+    @if (!noStreamYet()) {
+      <section class="owncast-stream__visibility owncast-panel" aria-labelledby="owncast-stream-vis-title">
+        <h3 id="owncast-stream-vis-title">Visibility</h3>
+        <p class="owncast-muted">
+          Current visibility:
+          <strong data-testid="owncast-stream-current-visibility">{{ currentVisibility() || 'unknown' }}</strong>
+        </p>
+
+        <fieldset class="owncast-stream__vis-fieldset">
+          <legend>Set visibility</legend>
+          <div role="radiogroup" aria-label="Stream visibility" class="owncast-stream__vis-options">
+            <label class="owncast-stream__vis-option">
+              <input
+                type="radio"
+                name="visibility"
+                value="internal"
+                [checked]="currentVisibility() === 'internal'"
+                [disabled]="flipping()"
+                (change)="setVisibility('internal')"
+                data-testid="owncast-stream-vis-internal"
+                aria-describedby="owncast-stream-vis-internal-help"
+              />
+              <span>Internal</span>
+            </label>
+            <span class="sr" id="owncast-stream-vis-internal-help">Visible only inside your brand. Always allowed.</span>
+
+            <label class="owncast-stream__vis-option">
+              <input
+                type="radio"
+                name="visibility"
+                value="public"
+                [checked]="isPublic()"
+                [disabled]="publicDisabled() || flipping()"
+                (change)="setVisibility('public')"
+                data-testid="owncast-stream-vis-public"
+                [attr.aria-describedby]="'owncast-stream-vis-public-help'"
+              />
+              <span>Public</span>
+            </label>
+            <!-- The DISABLED public option ALWAYS pairs with VISIBLE help-text
+                 explaining WHY (the canonical disabled+helptext gate). -->
+            @if (publicDisabled()) {
+              <p
+                class="owncast-warning owncast-stream__public-help"
+                id="owncast-stream-vis-public-help"
+                data-testid="owncast-stream-public-disabled-help"
+              >
+                {{ publicGateHelp }}.
+              </p>
+            } @else {
+              <span class="sr" id="owncast-stream-vis-public-help">Make your stream public. You have an active broadcast grant.</span>
+            }
+          </div>
+        </fieldset>
+
+        @if (publicDisabled()) {
+          <button
+            type="button"
+            class="owncast-btn owncast-btn--secondary"
+            [disabled]="flipping()"
+            (click)="tryGoPublic()"
+            data-testid="owncast-stream-try-public"
+            aria-describedby="owncast-stream-try-public-help"
+          >
+            {{ flipping() ? 'Checking…' : 'Try going public' }}
+          </button>
+          <p class="owncast-field__help" id="owncast-stream-try-public-help">
+            If an admin has granted you broadcast access, this makes your stream
+            public. Otherwise the server will decline and your stream stays internal.
+          </p>
+        }
+
+        @if (flipNotice()) {
+          <p class="owncast-success" role="status" data-testid="owncast-stream-flip-notice">{{ flipNotice() }}</p>
+        }
+        @if (flipError()) {
+          <p class="owncast-error" role="alert" data-testid="owncast-stream-flip-error">{{ flipError() }}</p>
+        }
+      </section>
+
+      <!-- ── In-platform video preview (embedded Owncast HLS player) ──
+           Bound to the bff's typed playbackUrl. Prefers hls.js when a federation
+           host has loaded it; otherwise native <video> HLS playback. -->
+      <section
+        class="owncast-stream__video owncast-panel"
+        aria-labelledby="owncast-stream-video-title"
+        data-testid="owncast-stream-video"
+      >
+        <h3 id="owncast-stream-video-title">Preview</h3>
+
+        @if (hasPlayback()) {
+          <div
+            class="owncast-stream__player"
+            data-testid="owncast-stream-player"
+          >
+            <video
+              #player
+              class="owncast-stream__video-el"
+              controls
+              playsinline
+              muted
+              preload="metadata"
+              aria-labelledby="owncast-stream-video-title"
+              aria-describedby="owncast-stream-video-help"
+              data-testid="owncast-stream-video-el"
+            ></video>
+          </div>
+          <p class="owncast-field__help" id="owncast-stream-video-help">
+            The in-platform HLS preview of your stream.
+          </p>
+
+          @if (playerLoading()) {
+            <p class="owncast-muted" role="status" data-testid="owncast-stream-player-loading">
+              Loading the stream player…
+            </p>
+          }
+          @if (playerError()) {
+            <p class="owncast-error" role="alert" data-testid="owncast-stream-player-error">
+              {{ playerError() }}
+            </p>
+          }
+        } @else {
+          <div
+            class="owncast-stream__player"
+            role="img"
+            aria-label="In-platform Owncast player preview for your stream — no playback available yet"
+            data-testid="owncast-stream-player"
+          >
+            <p class="owncast-muted" role="status" data-testid="owncast-stream-player-empty">
+              No in-platform playback is available yet. Once your stream is live,
+              its HLS preview will appear here.
+            </p>
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
