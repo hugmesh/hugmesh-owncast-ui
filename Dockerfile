@@ -1,6 +1,6 @@
 # hugmesh-owncast-ui — builds the Owncast management native-federation REMOTE
 # (src → dist/owncast/browser) and serves it via nginx with CORS so the
-# hugmesh.systems host can fetch its remoteEntry.json cross-origin.
+# hugmesh.net host can fetch its remoteEntry.json cross-origin.
 #
 # Serves on :8080 to MATCH the federation-api owncast module registration:
 #   remote_entry_url = http://hugmesh-owncast-ui:8080/remoteEntry.json

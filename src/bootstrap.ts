@@ -3,7 +3,7 @@
  * with the OWNCAST_ROUTES under the `/owncast` prefix so the remote is
  * browsable standalone via `ng serve owncast`.
  *
- * In production this file is NOT loaded — the hugmesh.systems host
+ * In production this file is NOT loaded — the hugmesh.net host
  * federates `./Owncast` (OWNCAST_ROUTES) directly at the /owncast mount.
  *
  * {@link provideHttpClient} with `withFetch()` (the fetch-backed HttpClient) is

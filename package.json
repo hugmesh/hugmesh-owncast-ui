@@ -1,7 +1,7 @@
 {
   "name": "@hugmesh/owncast",
   "version": "0.1.0",
-  "description": "Owncast management UI — native-federation remote (exposes ./Owncast at remoteEntry.json on :8080), role-gated streamer/broadcast-grants/moderation console over hugmesh-owncast-bff-api; mounted by the hugmesh.systems host at /owncast.",
+  "description": "Owncast management UI — native-federation remote (exposes ./Owncast at remoteEntry.json on :8080), role-gated streamer/broadcast-grants/moderation console over hugmesh-owncast-bff-api; mounted by the hugmesh.net host at /owncast.",
   "license": "MIT",
   "private": true,
   "scripts": {

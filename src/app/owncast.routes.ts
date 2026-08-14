@@ -7,7 +7,7 @@ import { OwncastForbiddenComponent } from './owncast-forbidden.component';
 import { owncastStreamGuard, owncastManageGuard, owncastModGuard } from './owncast.guard';
 
 /**
- * The exposed `./Owncast` module — mounted by the hugmesh.systems host at the
+ * The exposed `./Owncast` module — mounted by the hugmesh.net host at the
  * apex path /owncast (the federation-api owncast module row: mountAt '/owncast',
  * remote_entry_url http://hugmesh-owncast-ui:8080/remoteEntry.json,
  * requiresRole 'owncast', visibility internal). The host gates the WHOLE

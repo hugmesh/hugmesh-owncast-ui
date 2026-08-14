@@ -1,7 +1,7 @@
 # hugmesh-owncast-ui
 
 The **Owncast management UI** — an Angular **native-federation remote** that the
-`hugmesh.systems` host mounts at the apex path **`/owncast`**, role-gated in
+`hugmesh.net` host mounts at the apex path **`/owncast`**, role-gated in
 the host menu. It is the management console over the
 [`hugmesh-owncast-bff-api`](https://github.com/hugmesh-net/hugmesh-owncast-bff-api)
 streamer self-service surface and the broadcast grant/timeout/ban governance
@@ -122,7 +122,7 @@ fail-closed on a 403.
 
 ```mermaid
 flowchart TB
-  subgraph host["hugmesh.systems host (shell)"]
+  subgraph host["hugmesh.net host (shell)"]
     HostMenu["role-gated /owncast menu item"]
   end
 

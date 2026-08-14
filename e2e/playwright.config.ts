@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
 // Copied from the proven hugmesh.games/e2e pattern. The owncast-ui is a
-// native-federation REMOTE mounted by the hugmesh.systems host at /owncast
+// native-federation REMOTE mounted by the hugmesh.net host at /owncast
 // (federation-api owncast module row: mountAt '/owncast', requiresRole
 // 'owncast', visibility internal), so the e2e baseURL points at the host front
 // door (the federated remote is not browsable in isolation in a real stack).
