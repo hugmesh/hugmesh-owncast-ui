@@ -10,7 +10,12 @@
   padding: 0.5rem 1rem;
   border-radius: var(--owncast-radius);
   background: var(--owncast-accent);
-  color: #ffffff;
+  // The label sits ON the accent fill, so it must track the accent, not a fixed
+  // hex: white is 1.16:1 on the nonbinary preset's #fcf434 (invisible). The
+  // literal fallback repeats here rather than resting on the alias alone —
+  // unlike `background` above, an unresolved `color` falls back to *inherit*,
+  // which is --owncast-text (near-white) and lands us right back in the bug.
+  color: var(--owncast-accent-on, #ffffff);
   border: 1px solid var(--owncast-accent);
   text-decoration: none;
   font-weight: 600;

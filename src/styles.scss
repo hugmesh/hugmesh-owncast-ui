@@ -24,6 +24,14 @@
   --hug-text-muted:  #a8acc4; /*  8.77:1 AAA */
   --hug-accent:      #7c4dff; /* backgrounds/borders only — 3.22:1 as text */
   --hug-accent-soft: #b388ff; /*  7.38:1 AAA — use this for accent text */
+  /* Text sitting ON a filled --hug-accent. Pure #000/#fff, auto-picked by
+   * luminance upstream (core/theme.py on_color), so AA holds for ANY sRGB
+   * accent an operator themes in — a hardcoded #fff does not: measured across
+   * the shipped presets it fails AA on 24 of 38 (nonbinary's #fcf434 is
+   * 1.16:1, high-contrast's #00ffff 1.25:1). The literal here is the SHIPPED
+   * default only: on_color(#7c4dff) is #ffffff at 4.81:1, so an unthemed build
+   * renders exactly as before; snap-theme.css's :root:root replaces it. */
+  --hug-accent-on:   #ffffff; /*  4.81:1 AA on --hug-accent */
   --hug-success:     #4caf50;
   --hug-warning:     #ffb74d;
   --hug-error:       #ff6b6b;
@@ -36,6 +44,7 @@
   --owncast-text-muted:  var(--hug-text-muted);
   --owncast-accent:      var(--hug-accent);
   --owncast-accent-soft: var(--hug-accent-soft);
+  --owncast-accent-on:   var(--hug-accent-on, #ffffff);
   --owncast-success:     var(--hug-success);
   --owncast-warning:     var(--hug-warning);
   --owncast-error:       var(--hug-error);
