@@ -44,10 +44,10 @@ describe('OwncastConsoleComponent (role-gated nav)', () => {
     expect(el().querySelector('[role="menubar"]')).withContext('no menubar when no items').toBeNull();
   });
 
-  it('a STREAMER sees ONLY My Stream', () => {
+  it('a STREAMER sees ONLY My Stream and the Avatar cam (both STREAM = ROLE_OWNCAST)', () => {
     session.canStream.set(true);
     fixture.detectChanges();
-    expect(navTestIds()).toEqual(['owncast-nav-stream']);
+    expect(navTestIds()).toEqual(['owncast-nav-stream', 'owncast-nav-avatar-cam']);
   });
 
   it('a MOD sees ONLY Moderation', () => {
@@ -63,13 +63,14 @@ describe('OwncastConsoleComponent (role-gated nav)', () => {
     expect(navTestIds()).toEqual(['owncast-nav-grants', 'owncast-nav-moderation']);
   });
 
-  it('an ADMIN who also streams sees ALL three', () => {
+  it('an ADMIN who also streams sees ALL four', () => {
     session.canStream.set(true);
     session.canManage.set(true);
     session.canModerate.set(true);
     fixture.detectChanges();
     expect(navTestIds()).toEqual([
       'owncast-nav-stream',
+      'owncast-nav-avatar-cam',
       'owncast-nav-grants',
       'owncast-nav-moderation',
     ]);
@@ -84,15 +85,15 @@ describe('OwncastConsoleComponent (role-gated nav)', () => {
     expect(menubar).not.toBeNull();
     const items = Array.from(el().querySelectorAll('[role="menuitem"]')) as HTMLElement[];
     // Exactly one item is tabbable (tabindex=0); the rest are -1.
-    expect(items.map((i) => i.getAttribute('tabindex'))).toEqual(['0', '-1', '-1']);
+    expect(items.map((i) => i.getAttribute('tabindex'))).toEqual(['0', '-1', '-1', '-1']);
 
     const component = fixture.componentInstance;
     component.onKey(new KeyboardEvent('keydown', { key: 'ArrowRight' }), 0);
     fixture.detectChanges();
     expect(component.active).toBe(1);
     component.onKey(new KeyboardEvent('keydown', { key: 'End' }), 1);
-    expect(component.active).toBe(2);
-    component.onKey(new KeyboardEvent('keydown', { key: 'Home' }), 2);
+    expect(component.active).toBe(3);
+    component.onKey(new KeyboardEvent('keydown', { key: 'Home' }), 3);
     expect(component.active).toBe(0);
   });
 

@@ -4,6 +4,7 @@ import { OwncastStreamComponent } from './owncast-stream.component';
 import { OwncastGrantsComponent } from './owncast-grants.component';
 import { OwncastModerationComponent } from './owncast-moderation.component';
 import { OwncastForbiddenComponent } from './owncast-forbidden.component';
+import { AvatarCamComponent } from './avatar-cam/avatar-cam.component';
 import { owncastStreamGuard, owncastManageGuard, owncastModGuard } from './owncast.guard';
 
 /**
@@ -34,6 +35,8 @@ export const OWNCAST_ROUTES: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'stream' },
       { path: 'stream', component: OwncastStreamComponent, canActivate: [owncastStreamGuard] },
+      // The avatar cam is a streamer's tool, gated exactly like My Stream.
+      { path: 'avatar-cam', component: AvatarCamComponent, canActivate: [owncastStreamGuard] },
       { path: 'grants', component: OwncastGrantsComponent, canActivate: [owncastManageGuard] },
       { path: 'moderation', component: OwncastModerationComponent, canActivate: [owncastModGuard] },
       { path: 'forbidden', component: OwncastForbiddenComponent },

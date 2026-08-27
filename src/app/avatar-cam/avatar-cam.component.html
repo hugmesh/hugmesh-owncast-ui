@@ -1,0 +1,91 @@
+<div class="avatar-cam" [class.avatar-cam--capture]="capture()" [attr.data-bg]="background()" data-testid="owncast-avatar-cam">
+  @if (!capture()) {
+    <h2 id="owncast-avatar-cam-title" data-testid="owncast-avatar-cam-title">Avatar cam</h2>
+    <p class="owncast-muted" id="owncast-avatar-cam-help">
+      Go live as your own 2D avatar. The avatar you built in the Character Forge
+      talks along with your microphone — three mouth frames, the way a visual
+      novel's sprite does. Your stream still comes from OBS: capture this window
+      there and key out the background.
+    </p>
+  }
+
+  @if (loading()) {
+    <p role="status" data-testid="owncast-avatar-cam-loading">Loading your avatars…</p>
+  } @else if (loadError()) {
+    <p class="owncast-error" role="alert" data-testid="owncast-avatar-cam-load-error">{{ loadError() }}</p>
+  } @else if (avatars().length === 0) {
+    <p class="owncast-muted" role="status" data-testid="owncast-avatar-cam-empty">
+      You have no avatar yet. Build one in the games portal's Character Forge, make it
+      active, and it will appear here.
+    </p>
+  } @else {
+    <div class="avatar-cam__stage" data-testid="owncast-avatar-cam-stage" [attr.data-viseme]="viseme()">
+      @if (frameSrc(); as src) {
+        <img class="avatar-cam__frame" data-testid="owncast-avatar-cam-frame" [src]="src" [alt]="avatarName() + ' — ' + expression() + ', mouth ' + labelOf(viseme()).toLowerCase()" />
+      } @else if (frameError()) {
+        <p class="owncast-error" role="alert" data-testid="owncast-avatar-cam-frame-error">{{ frameError() }}</p>
+      } @else {
+        <p class="owncast-muted" role="status">Rendering…</p>
+      }
+      @if (capture() && !micLive()) {
+        <button type="button" class="owncast-btn avatar-cam__start" data-testid="owncast-avatar-cam-capture-start" (click)="toggleMic()">Start the microphone</button>
+      }
+    </div>
+
+    @if (!capture()) {
+      <section class="owncast-panel avatar-cam__controls" aria-labelledby="owncast-avatar-cam-title" aria-describedby="owncast-avatar-cam-help">
+        <div class="owncast-field">
+          <label for="owncast-avatar-cam-avatar">Avatar</label>
+          <select id="owncast-avatar-cam-avatar" data-testid="owncast-avatar-cam-avatar" [value]="avatarId()" (change)="onAvatar($event)">
+            @for (a of avatars(); track a.id) {
+              <option [value]="a.id" [selected]="a.id === avatarId()">{{ a.name }}{{ a.active ? ' (active)' : '' }}</option>
+            }
+          </select>
+        </div>
+        <div class="owncast-field">
+          <label for="owncast-avatar-cam-expression">Expression</label>
+          <select id="owncast-avatar-cam-expression" data-testid="owncast-avatar-cam-expression" [value]="expression()" (change)="onExpression($event)">
+            @for (e of expressions; track e) {
+              <option [value]="e" [selected]="e === expression()">{{ e }}</option>
+            }
+          </select>
+        </div>
+        <div class="owncast-field">
+          <label for="owncast-avatar-cam-bg">Background</label>
+          <select id="owncast-avatar-cam-bg" data-testid="owncast-avatar-cam-bg" [value]="background()" (change)="onBackground($event)">
+            @for (b of backgrounds; track b.id) {
+              <option [value]="b.id" [selected]="b.id === background()">{{ b.label }}</option>
+            }
+          </select>
+        </div>
+
+        <h3>Talk</h3>
+        <div class="avatar-cam__frames" role="group" aria-label="Mouth frame preview">
+          @for (v of visemes; track v) {
+            <button type="button" class="owncast-btn owncast-btn--secondary" [attr.data-testid]="'owncast-avatar-cam-viseme-' + v"
+                    [attr.aria-pressed]="viseme() === v" [disabled]="micLive()" (click)="previewViseme(v)">{{ labelOf(v) }}</button>
+          }
+        </div>
+        <div class="avatar-cam__mic">
+          <button type="button" class="owncast-btn" data-testid="owncast-avatar-cam-mic" [attr.aria-pressed]="micLive()" (click)="toggleMic()">
+            {{ micLive() ? 'Stop the microphone' : 'Use my microphone' }}
+          </button>
+          <label class="avatar-cam__level">Level
+            <meter data-testid="owncast-avatar-cam-level" min="0" max="1" [value]="openness()" [attr.aria-valuetext]="(openness() * 100).toFixed(0) + '%'"></meter>
+          </label>
+        </div>
+        <p role="status" aria-live="polite" data-testid="owncast-avatar-cam-status" class="owncast-muted">
+          @if (micError()) { {{ micError() }} } @else if (micLive()) { Listening — mouth: {{ labelOf(viseme()).toLowerCase() }}. }
+        </p>
+
+        <h3>Put it on air</h3>
+        <ol class="avatar-cam__howto" data-testid="owncast-avatar-cam-howto">
+          <li><button type="button" class="owncast-btn owncast-btn--secondary" data-testid="owncast-avatar-cam-popout" (click)="popOut()">Pop out the camera</button> — a window with only the avatar on a green background.</li>
+          <li>In OBS add a <strong>Window Capture</strong> of that window and a <strong>Chroma Key</strong> filter on it.</li>
+          <li>Start the microphone in the pop-out and go live from OBS as usual — your ingest is unchanged.</li>
+        </ol>
+        <p class="owncast-field__help">Capture URL: <code data-testid="owncast-avatar-cam-capture-url">{{ captureUrl() }}</code></p>
+      </section>
+    }
+  }
+</div>
