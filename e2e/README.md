@@ -87,5 +87,13 @@ rm pw-validate.config.ts
 ## Running against a live stack (later wave)
 
 Drop the `@cluster` tag from a feature (or run with an override config that
-omits the `not @cluster` filter), export `E2E_BASE_URL` + the per-role
-`E2E_*_PASSWORD` vars, then `npm run bdd`.
+omits the `not @cluster` filter), export `E2E_BASE_URL`, then `npm run bdd`.
+
+Per-user `E2E_<ROLE>_PASSWORD` / shared `E2E_PASSWORD` env vars are optional
+overrides, not requirements: `tests/helpers/roles.ts` (`passwordFor()`) falls
+back to the run-state `.e2e-credentials` file written by hugmesh-generator's
+`make stack-seed` (`$E2E_CREDENTIALS_FILE`, or a `.e2e-credentials` found by
+walking up from cwd). There is no built-in literal password — if nothing
+resolves, the suite throws naming `make stack-seed` rather than silently
+authenticating with a guessable default. The offline validation above is
+unaffected: passwords resolve at login time, not at `bddgen` / `--list` time.
