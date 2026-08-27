@@ -20,6 +20,7 @@ interface OwncastNavItem {
  * The nav items are SHOWN BY ROLE (defence-in-depth; the child guards + the bff
  * are authoritative):
  *   My Stream  (stream)     — shown to STREAM   (ROLE_OWNCAST).
+ *   Avatar cam (avatar-cam) — shown to STREAM   (ROLE_OWNCAST).
  *   Broadcast grants (grants) — shown to MANAGE (admin|superadmin).
  *   Moderation (moderation) — shown to MODERATE (mod|admin|superadmin).
  * So a plain STREAMER sees only My Stream; a MOD additionally sees Moderation;
@@ -54,6 +55,13 @@ export class OwncastConsoleComponent {
       label: 'My Stream',
       aria: 'My stream — visibility, title and description',
       help: 'View your stream, edit its title and description, and toggle its visibility. Requires the owncast role.',
+      show: () => this.session.canStream(),
+    },
+    {
+      path: 'avatar-cam',
+      label: 'Avatar cam',
+      aria: 'Avatar cam — stream as your 2D avatar, mouth following your voice',
+      help: 'Go live as your own 2D avatar: the games avatar you built talks along with your microphone; capture the window in OBS. Requires the owncast role.',
       show: () => this.session.canStream(),
     },
     {

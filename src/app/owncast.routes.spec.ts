@@ -2,7 +2,8 @@ import { Route } from '@angular/router';
 
 import { OWNCAST_ROUTES } from './owncast.routes';
 import { OwncastModerationComponent } from './owncast-moderation.component';
-import { owncastModGuard } from './owncast.guard';
+import { owncastModGuard, owncastStreamGuard } from './owncast.guard';
+import { AvatarCamComponent } from './avatar-cam/avatar-cam.component';
 
 /**
  * Route wiring — pins that the moderation VIEW stays behind the existing
@@ -16,6 +17,13 @@ describe('OWNCAST_ROUTES (moderation role gating)', () => {
     expect(r).withContext(`route ${path} exists`).toBeDefined();
     return r!;
   }
+
+  it('mounts the avatar cam behind owncastStreamGuard, exactly like My Stream', () => {
+    const cam = child('avatar-cam');
+    expect(cam.component).toBe(AvatarCamComponent);
+    expect(cam.canActivate).toContain(owncastStreamGuard);
+    expect(cam.canActivate).not.toContain(owncastModGuard);
+  });
 
   it('mounts the moderation view behind owncastModGuard', () => {
     const mod = child('moderation');

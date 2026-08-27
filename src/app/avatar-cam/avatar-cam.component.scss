@@ -1,0 +1,98 @@
+.avatar-cam {
+  max-width: 48rem;
+  display: grid;
+  gap: 1rem;
+
+  h2,
+  h3 {
+    margin: 0 0 0.25rem;
+  }
+
+  &__stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 18rem;
+    border-radius: var(--owncast-radius, 8px);
+    border: 1px solid var(--owncast-border);
+    background: transparent;
+    overflow: hidden;
+  }
+
+  &[data-bg='green'] &__stage {
+    background: #00b140;
+  }
+
+  &[data-bg='blue'] &__stage {
+    background: #0047bb;
+  }
+
+  &[data-bg='surface'] &__stage {
+    background: var(--owncast-surface);
+  }
+
+  &__frame {
+    max-width: 100%;
+    max-height: 32rem;
+    display: block;
+  }
+
+  &__start {
+    position: absolute;
+    bottom: 1rem;
+  }
+
+  &__controls {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  &__frames,
+  &__mic {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  &__level {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+
+    meter {
+      width: 8rem;
+    }
+  }
+
+  &__howto {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  code {
+    overflow-wrap: anywhere;
+  }
+
+  /* Capture mode: nothing but the avatar, edge to edge, on the keyed colour. */
+  &--capture {
+    max-width: none;
+    min-height: 100vh;
+    gap: 0;
+  }
+
+  &--capture &__stage {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  &--capture &__frame {
+    max-height: 100vh;
+    height: 100vh;
+    width: auto;
+  }
+}
