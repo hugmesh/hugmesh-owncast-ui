@@ -91,9 +91,17 @@
 				"serve-original": {
 					"builder": "@angular-devkit/build-angular:dev-server",
 					"options": {
-						"buildTarget": "owncast:build",
 						"port": 4209
-					}
+					},
+					"configurations": {
+						"production": {
+							"buildTarget": "owncast:esbuild:production"
+						},
+						"development": {
+							"buildTarget": "owncast:esbuild:development"
+						}
+					},
+					"defaultConfiguration": "development"
 				},
 				"test": {
 					"builder": "@angular-devkit/build-angular:karma",
