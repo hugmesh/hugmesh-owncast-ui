@@ -22,10 +22,10 @@ two things:
 
 ## Status
 
-Everything below reflects the code on `main` as of 2026-07-16, and is verified
-by the project's own checks rather than aspirational: `npm ci && npm run
+Everything below reflects the code on `main` as of 2026-10-07, and is verified
+by the project's own checks rather than aspirational: `npm run
 build` succeeds and emits `remoteEntry.json`; `npx tsc -p tsconfig.app.json
---noEmit` is clean; `npm test` is 97/97 green on Chrome headless.
+--noEmit` is clean; `npm test` is 120/120 green on Chrome headless.
 
 **Shipped and working on `main`:**
 
@@ -47,15 +47,19 @@ build` succeeds and emits `remoteEntry.json`; `npx tsc -p tsconfig.app.json
   `OwncastService` delegates every call to it.
 - **Cookie-only auth**: the browser holds no bearer/token for this remote — every
   `/bff/owncast/**` call rides the shared HttpOnly `bff_` session cookie
-  (`owncast-auth.interceptor.ts`). #14 replaced the `bffToken` bearer this
-  remote used to read out of `localStorage` and send as `Authorization` with
-  the cookie approach; #15 then dropped the Matrix/Mastodon access-token fields
-  that `SnapSession` carried for shape-parity with the other HugMesh UIs but
-  that this remote never actually read.
+  (`owncast-auth.interceptor.ts`). An earlier version read a `bffToken` bearer out of `localStorage` and sent it
+  as `Authorization`; that is gone, and `SnapSession` no longer carries the
+  Matrix/Mastodon access-token fields it once had for shape-parity with the
+  other HugMesh UIs.
 - Baseline nginx security headers (`nosniff`, `X-Frame-Options: DENY`,
-  `Referrer-Policy`, HSTS) on the served SPA (`nginx.conf`).
-- A Playwright + `playwright-bdd` Gherkin e2e harness (`e2e/`, 30 scenarios
-  across 6 feature files) — see `e2e/README.md`. It **ships dark**: every
+  `Referrer-Policy`, HSTS) and a per-response, nonce-based
+  `Content-Security-Policy` on the served SPA (`nginx.conf`).
+- Runtime theming: `docker-entrypoint.d/50-hug-theme.sh` writes the theme CSS
+  from `HUG_THEME_CSS` (legacy `SNAP_THEME_CSS` still read) at container start,
+  and `nginx.conf` serves it at `/hug-theme.css` (and the legacy
+  `/snap-theme.css`).
+- A Playwright + `playwright-bdd` Gherkin e2e harness (`e2e/`, 42 scenarios
+  across 12 feature files) — see `e2e/README.md`. It **ships dark**: every
   scenario is tagged `@cluster` and filtered out by default, so it currently
   proves the suite compiles + is discoverable offline, not that it passes
   against a live stack.
@@ -67,9 +71,9 @@ build` succeeds and emits `remoteEntry.json`; `npx tsc -p tsconfig.app.json
 
 **Known gaps (deferred, not hidden):**
 
-- Stricter response headers (CSP, COEP/CORP, Permissions-Policy) are
-  deliberately deferred pending per-UI tuning + a live-cluster browser
-  validation pass (see `nginx.conf` and the Federation contract section below).
+- COEP/CORP and Permissions-Policy response headers are deliberately deferred
+  pending per-UI tuning + a live-cluster browser validation pass (see
+  `nginx.conf` and the Federation contract section below). The CSP is shipped.
 - The `pentest:dast` CI job (`.gitlab-ci.yml`) extends the centralized OWASP
   harness, but this repo does not yet vendor/fetch the harness at
   `PENTEST_HARNESS_DIR`, so the job fails fast at the harness lookup instead of
@@ -101,9 +105,11 @@ Owncast `:1935`). The page is the **camera**:
    shared cross-remote runtime import). Without a mic the three frame buttons
    preview by hand.
 4. **Pop out the camera** opens `?capture=1&bg=green&avatar=…&expression=…`:
-   the avatar and nothing else, sized to the window, on the keyed colour. In
-   OBS add a *Window Capture* of that window and a *Chroma Key* filter, then go
-   live from OBS as usual.
+   the avatar and nothing else, sized to the window, on the keyed colour (`bg=`
+   is the background picked in the page: green, blue or mesh surface; transparent
+   becomes green). In OBS add a *Window Capture* of that window and a *Chroma Key*
+   filter, then go live from OBS as usual. Start the microphone in the pop-out
+   window too; it has its own button.
 
 The games host is derived from the page's own host (`https://games.<host>`,
 the generator's `games.<CLUSTER_DOMAIN>` route); the host shell may pin it
@@ -134,10 +140,12 @@ So this remote:
   **security-header set** (`X-Content-Type-Options: nosniff`,
   `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`,
   HSTS) — inspection-safe for an Angular SPA + native-federation remotes, and
-  re-emitted in the `location /` + `/healthz` blocks because
-  nginx drops inherited `add_header`s wherever a location sets its own. Stricter
-  policies (CSP, COEP/CORP, Permissions-Policy) are deliberately deferred pending
-  per-UI tuning + live-cluster browser validation;
+  re-emitted in each `location` block (`/`, `/healthz`, and the two theme-CSS
+  locations, which omit HSTS) because nginx drops inherited `add_header`s
+  wherever a location sets its own. `location /` also sends a nonce-based
+  `Content-Security-Policy` (the nonce is injected into every `<script>` tag of
+  `index.html` by `sub_filter`). COEP/CORP and Permissions-Policy are deliberately
+  deferred pending per-UI tuning + live-cluster browser validation;
 - is **internal** — reachable only behind the gateway's
   `/owncast=ROLE_OWNCAST` route-access gate; it is not a public surface.
 
@@ -215,12 +223,12 @@ State legend: ✅ shipped (on `main`) · 🚧 in-flight (open branch/PR) · 🔭
 > player down idempotently on destroy / source change. The title/description upsert
 > and the visibility toggle are ✅ shipped alongside it.
 
-Role visibility is additive: a plain **STREAMER** sees only My Stream; a **MOD** additionally sees Moderation; an **ADMIN** additionally sees the Broadcast grants console; a **SUPERADMIN** additionally sees the full active-grants list and per-principal history. A user who holds none of the owncast roles is redirected to the **in-remote** `/owncast/forbidden` screen.
+Role visibility is per capability, not a strict ladder. `STREAM` is the bare `owncast` role only, so a **STREAMER** sees My Stream and Avatar cam (both are `STREAM` views); a **MOD** with the `owncast` role additionally sees Moderation; an **ADMIN** with it additionally sees the Broadcast grants console and Moderation; a **SUPERADMIN** additionally sees the full active-grants list and per-principal history. A mod, admin or superadmin who lacks the `owncast` role does not get My Stream or Avatar cam. A user who holds none of the owncast roles is redirected to the **in-remote** `/owncast/forbidden` screen.
 
 ### Forbidden redirect (critical)
 
 A denied child guard routes to **`router.parseUrl('/owncast/forbidden')`** — the in-remote forbidden screen mounted under this remote's own path prefix. It must **not** route to `'/forbidden'` or `'/login'`. The reason: by the time a child guard runs, the host has already admitted the user through the `/owncast=ROLE_OWNCAST` route-access gate. A denial at this point is a within-service privilege boundary (e.g. a streamer attempting the admin console), not an authentication failure. Routing to the bare `/forbidden` is a mistake another HugMesh remote
-([`hugmesh-wiki-ui`](https://github.com/hugmesh/hugmesh-wiki-ui)) made; this remote ships the correctly prefixed path.
+([`hugmesh-wiki-ui`](https://github.com/hugmesh/hugmesh-wiki-ui)) once made (it now routes to `/wiki/forbidden`); this remote ships the correctly prefixed path.
 
 ### The public-visibility gate (canonical disabled+helptext)
 
@@ -295,7 +303,7 @@ credentials; the fe-gateway turns it into the upstream Bearer server-side). The
 browser holds no admin-capable bearer.
 
 The **Moderation view is ✅ shipped and wired** to the `/bff/owncast/mod/**`
-endpoints above (`OwncastModController`): it lists every stream in the
+endpoints above (`OwncastModerationController`): it lists every stream in the
 moderator's brand and exposes per-row **Hide** (force private; disabled +
 help-text *"Already private"* when internal), **Kill** (confirm-gated; bans the
 streamer from broadcasting + forces internal; disabled + help-text *"Already
@@ -303,8 +311,7 @@ banned"* when banned), and **Restore** (revoke the ban — does not auto-republi
 The role-shown controls + the route guard are defence-in-depth; the bff
 `@PreAuthorize` is authoritative, and a 403 surfaces gracefully. The "There are
 no streams to review in your brand" message is the normal empty list, **not** a
-missing-endpoint placeholder. (The view shipped via PR #2 — *"wire the moderation
-view to the owncast-bff `/mod` endpoints"*.)
+missing-endpoint placeholder.
 
 ## Typed API client (ng-openapi-gen)
 
@@ -352,7 +359,7 @@ npm run build                      # production build → dist/owncast/browser (
 Primary CI is **GitLab** (`.gitlab-ci.yml`): this GitHub repository is mirrored
 into a GitLab pipeline that builds and pushes the image. A manual-only GitHub
 Actions workflow (`.github/workflows/release.yml`) is also available for
-publishing an image to `ghcr.io/hugmesh-net/hugmesh-owncast-ui`; it only runs
+publishing an image to `ghcr.io/hugmesh/hugmesh-owncast-ui`; it only runs
 on an explicit `workflow_dispatch`, never on push. Today the GitLab pipeline
 has four stages: **`test`** (headless
 Karma), **`e2e`** (`e2e:bdd` → Playwright/playwright-bdd offline
@@ -378,8 +385,8 @@ registry push), and **`pentest`** (jobs defined, first executed run pending).
 ## Roadmap
 
 State legend: ✅ shipped (on `main`) · 🚧 in-flight (open branch/PR) · 🔭 planned
-(design only, no code). Everything below is **not yet shipped on `main`**; the
-console renders fully today without it.
+(design only, no code). The first two items are shipped; the third is partly
+done and nothing is open for it.
 
 - ✅ **In-platform video player.** The "My Stream" *Preview* panel is a real
   in-platform HLS player (hls.js-preferred, native-`<video>` fallback) bound to the
@@ -393,7 +400,7 @@ console renders fully today without it.
   delegates every call to the generated services while keeping its own public DTO
   types + Promise/`OwncastApiError` signature, so the consuming components are
   unchanged (see **Typed API client**).
-- 🚧 **Continuous-OWASP CI stage — jobs defined, first run pending.** The shared
+- **Continuous-OWASP CI stage — jobs defined, first run pending** (no open branch or PR; the earlier attempt, PR #14, was closed unmerged). The shared
   `.gitlab-ci.yml` pen-test include is in place: non-blocking `pentest:sca` +
   `pentest:dast` jobs extend the centralized generator template. SCA is
   self-contained; the DAST leg (ZAP + nuclei templates) still needs the shared
