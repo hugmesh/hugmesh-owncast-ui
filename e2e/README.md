@@ -4,8 +4,7 @@ Gherkin-driven end-to-end harness for the owncast-ui federated remote, copied
 from the proven `hugmesh.games/e2e` pattern (`@playwright/test` +
 `playwright-bdd`, single-worker serial, `screenshot:'on'`/`video:'on'`, HTML
 reporter, the per-step PNG `AfterStep` hook in
-`features/support/fixtures.ts`). Mirrors the merged wave-2b PRs admin-ui#39,
-superadmin-appstore-ui#2 and login-ui#19.
+`features/support/fixtures.ts`).
 
 The owncast-ui is the UI half of the **optional Owncast streaming service**, so
 this suite leads with the per-role broadcast-governance surface: a user controls
@@ -17,7 +16,7 @@ forbidden.
 | --- | --- | --- |
 | USER-SITUATIONAL | `features/stream/my-stream.feature` | a streamer controls their own stream (ALLOW); the public-visibility option is **disabled + the broadcast-gate helptext** until an admin grants broadcast; no-role → in-remote forbidden (DENY) |
 | USER-SITUATIONAL | `features/stream/superadmin-exemption.feature` | the UI fail-closed-disables public even for a superadmin, and the **Try going public probe succeeds grant-free** (the bff's documented SUPERADMIN guard exemption) |
-| USER-SITUATIONAL | `features/gating/role-aware-nav.feature` | each role sees only the nav items it can use; a user with no owncast role sees an **empty menubar** (greyed-out / no access) |
+| USER-SITUATIONAL | `features/gating/role-aware-nav.feature` | each role sees only the nav items it can use; a user with no owncast role sees **no nav at all** (the menubar is not rendered; greyed-out / no access) |
 | MULTIUSER | `features/grants/broadcast-grants.feature` | admin sees the grant action form; the active-grants + history panels are **superadmin-only**; mod/streamer → forbidden (DENY) |
 | MULTIUSER | `features/grants/grant-to-public-lifecycle.feature` | **the core journey**: streamer creates their stream (victim-creates-first), is denied live, admin grants, the streamer's next try-public **succeeds mid-session** and the UI leaves the fail-closed state |
 | MULTIUSER | `features/grants/revocation-mid-session.feature` | removing the grant flips the streamer back to fail-closed on the next attempt; **ban beats a still-active grant** from the victim's perspective |
@@ -64,6 +63,9 @@ unit build or any app code.
 
 ## Offline validation (no cluster)
 
+With the default config, `npx playwright test --list` prints `Error: No tests
+found` and exits 1. That is the dark state, not a failure.
+
 ```sh
 npm install
 npx bddgen            # default: 'not @cluster' → 0 specs (ships dark, intended)
@@ -87,7 +89,7 @@ rm pw-validate.config.ts
 ## Running against a live stack (later wave)
 
 Drop the `@cluster` tag from a feature (or run with an override config that
-omits the `not @cluster` filter), export `E2E_BASE_URL`, then `npm run bdd`.
+omits the `not @cluster` filter), export `E2E_BASE_URL` (default `https://host.docker.internal:8443`), then `npm run bdd`.
 
 Per-user `E2E_<ROLE>_PASSWORD` / shared `E2E_PASSWORD` env vars are optional
 overrides, not requirements: `tests/helpers/roles.ts` (`passwordFor()`) falls
