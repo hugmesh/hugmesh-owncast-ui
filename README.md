@@ -18,6 +18,7 @@ It does two things:
 
 | component | version |
 | --- | --- |
+| this image (`package.json`) | 0.2.0-beta.1 |
 | Angular | 22.0.x |
 | @angular-architects/native-federation | 22.x |
 | ng-openapi-gen | 1.0.5 |
@@ -384,10 +385,35 @@ npm run build                      # production build → dist/owncast/browser (
 Set `CHROME_BIN=/opt/google/chrome/chrome` (or chromium) for headless tests in CI.
 
 Primary CI is **GitLab** (`.gitlab-ci.yml`): this GitHub repository is mirrored
-into a GitLab pipeline that builds and pushes the image. A manual-only GitHub
-Actions workflow (`.github/workflows/release.yml`) can also publish an image to
-`ghcr.io/hugmesh/hugmesh-owncast-ui`. It runs only on an explicit
-`workflow_dispatch`, never on push. The GitLab pipeline has four stages:
+into a GitLab pipeline that builds and pushes the image. The one GitHub Actions
+workflow, `.github/workflows/release.yml`, publishes
+`ghcr.io/hugmesh/hugmesh-owncast-ui`. It first runs the same Karma unit tests as
+the GitLab `test` job, then:
+
+- On a push to `main`, it pushes the tags `main` and `sha-<first 12 hex of the commit>`.
+- On a `v<version>` tag, it pushes `<version>`, `beta` (for beta versions) and
+  `sha-<12 hex>`, and creates a GitHub release marked as a prerelease and not
+  latest. The tag must equal `v` plus the `version` in `package.json` (and
+  `package-lock.json`), and it must point at a commit on `main`. A version tag
+  that is already in the registry is never overwritten.
+- A manual run (`workflow_dispatch`) on `main` or on a `v*` tag does the same as
+  the matching push. Any other branch or tag is refused.
+- It never pushes `latest`, and it has no pull-request trigger.
+
+Its jobs run on the self-hosted runner only when the repository variable
+`RUNS_ON_PUBLISH` holds a runner label list (for example
+`["self-hosted","Linux","X64"]`) and the run is for `main` or a `v*` tag.
+Otherwise they run on GitHub's hosted `ubuntu-latest`.
+
+**Image version.** The `version` in `package.json` is the image version. It uses
+`MAJOR.MINOR.PATCH-beta.N`; the current version is `0.2.0-beta.1` (built and
+tested, not yet proven on a live mesh). To publish a beta, set the new version in
+`package.json` and `package-lock.json` (for example
+`npm version 0.2.0-beta.2 --no-git-tag-version`), merge that to `main`, then push
+an annotated tag `v0.2.0-beta.2` on that commit. A fix during a beta raises `N`.
+The `0.1.0` in `openapi.json` is the BFF's API version, not this image's.
+
+The GitLab pipeline has four stages:
 **`test`** (headless Karma), **`e2e`** (`e2e:bdd`, Playwright/playwright-bdd
 offline compile and discover, `allow_failure: true`), **`build`** (`build:image`,
 registry push) and **`pentest`** (jobs defined, first run pending).
