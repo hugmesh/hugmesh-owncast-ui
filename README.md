@@ -391,14 +391,21 @@ workflow, `.github/workflows/release.yml`, publishes
 the GitLab `test` job, then:
 
 - On a push to `main`, it pushes the tags `main` and `sha-<first 12 hex of the commit>`.
-- On a `v<version>` tag, it pushes `<version>`, `beta` (for beta versions) and
+- On a push to a `release/X.Y` branch, it pushes `sha-<12 hex>` only.
+- On a beta tag `vX.Y.Z-beta.N`, it pushes `X.Y.Z-beta.N`, `beta` and
   `sha-<12 hex>`, and creates a GitHub release marked as a prerelease and not
-  latest. The tag must equal `v` plus the `version` in `package.json` (and
-  `package-lock.json`), and it must point at a commit on `main`. A version tag
-  that is already in the registry is never overwritten.
-- A manual run (`workflow_dispatch`) on `main` or on a `v*` tag does the same as
-  the matching push. Any other branch or tag is refused.
-- It never pushes `latest`, and it has no pull-request trigger.
+  latest. The commit must be on `main`.
+- On a stable tag `vX.Y.Z`, it pushes `X.Y.Z`, `X.Y` and `sha-<12 hex>`, plus
+  `latest` when `X.Y` is the newest stable line, and creates a GitHub release
+  marked Latest only in that case. The commit must be on `release/X.Y`. A patch
+  on an older line moves `X.Y` but never `latest`.
+- Any tag must equal `v` plus the `version` in `package.json` (and
+  `package-lock.json`). A version tag that is already in the registry is never
+  overwritten; `beta`, `X.Y` and `latest` move. `scripts/release-channel.sh`
+  decides all of this and `scripts/test-release-channel.sh` tests it.
+- A manual run (`workflow_dispatch`) on `main`, a `release/X.Y` branch or a `v*`
+  tag does the same as the matching push. Any other branch or tag is refused.
+- It has no pull-request trigger.
 
 Its jobs run on the self-hosted runner only when the repository variable
 `RUNS_ON_PUBLISH` holds a runner label list (for example
