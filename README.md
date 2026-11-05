@@ -75,10 +75,10 @@ headless.
 - COEP/CORP and Permissions-Policy response headers are deferred pending per-UI
   tuning and a live-cluster browser check (see `nginx.conf` and the Federation
   contract section below). The CSP is shipped.
-- `pentest:dast` (`.gitlab-ci.yml`) extends the central OWASP harness, but this
-  repo does not vendor or fetch the harness at `PENTEST_HARNESS_DIR`. The job
-  fails at the harness lookup instead of scanning. No run of the pen-test stage
-  has been verified.
+- `pentest:dast` (`.gitlab-ci.yml`) fetches the shared OWASP harness at CI time
+  (a shallow clone of `hugmesh-generator` into `.pentest-harness`), but no run
+  of the pen-test stage has been verified yet. The opt-in k6 load leg is not
+  wired (an operator decision).
 - The e2e harness has never run against a live stack from this repo (it needs
   the host shell, owncast-bff and a Casdoor seed). Only the offline
   compile-and-discover gate has run.
@@ -434,11 +434,13 @@ registry push) and **`pentest`** (jobs defined, first run pending).
 > nuclei boundary templates). Both are `allow_failure: true` (additive,
 > non-blocking) and run on the default branch and merge requests. `pentest:sca`
 > is self-contained: it scans this repo's checkout. `pentest:dast` runs
-> `${PENTEST_HARNESS_DIR}/run-pentest.sh`, which this repo does **not** vendor
-> (default `tests/pentest`), so until the shared harness is vendored or fetched
-> the DAST job fails fast at the harness lookup instead of scanning. No run of
-> this stage has been verified. The opt-in k6 load leg (`.pentest-load`) is not
-> wired here.
+> `${PENTEST_HARNESS_DIR}/run-pentest.sh`; this repo does not vendor the
+> harness, so the job's `before_script` shallow-clones `hugmesh-generator`
+> (ref `main`) into `.pentest-harness` and points `PENTEST_HARNESS_DIR` there,
+> then runs the base template's own `before_script` (harness check + pinned
+> nuclei). `bash scripts/test-pentest-dast-wiring.sh` checks that wiring
+> offline. No run of this stage has been verified. The opt-in k6 load leg
+> (`.pentest-load`) is not wired here; that waits on an operator decision.
 
 ## Roadmap
 
@@ -454,9 +456,9 @@ done and nothing is open for it.
 - ✅ **ng-openapi-gen typed client.** See **Typed API client**.
 - **Continuous-OWASP CI stage: jobs defined, first run pending** (no open branch
   or PR; the earlier attempt, PR #14, was closed unmerged). SCA is
-  self-contained. The DAST leg (ZAP + nuclei templates) still needs the shared
-  harness at `PENTEST_HARNESS_DIR`, and the k6 load leg is unwired (see
-  **Develop**).
+  self-contained. The DAST leg (ZAP + nuclei templates) now fetches the shared
+  harness at CI time, but no pipeline run has confirmed it scans yet, and the
+  k6 load leg is unwired pending an operator decision (see **Develop**).
 
 Per-domain federated per-user video remotes (templated like profile cards) are a
 platform-level Owncast capability tracked outside this remote. This repo is the
