@@ -80,9 +80,10 @@ export const SEED_USERS: SeedUser[] = [
   { username: 'superadmin', passwordEnv: 'E2E_SUPERADMIN_PASSWORD', provider: 'google', roles: ['user', 'owncast', 'superadmin'], kind: 'superadmin' },
 
   // ── Plain user — no owncast role at all. Even though the host let them reach
-  //    the /owncast mount, EVERY child guard forbids them: the default route's
-  //    stream-guard sends them to /owncast/forbidden. The floor of the DENY
-  //    matrix and the "feature greyed-out / no access" surface.
+  //    the /owncast mount, EVERY child guard forbids them, and the default
+  //    route (owncastLandingRedirect: first of stream/grants/moderation the
+  //    role can open) has nowhere to send them but /owncast/forbidden. The
+  //    floor of the DENY matrix and the "feature greyed-out / no access" surface.
   { username: 'plain-user', passwordEnv: 'E2E_USER_PASSWORD', provider: 'google', roles: ['user'], kind: 'user', domain: 'domain-a' },
 ];
 

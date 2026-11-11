@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, RedirectFunction, Router } from '@angular/router';
 import { SessionService } from './session.service';
 
 /**
@@ -45,3 +45,34 @@ export const owncastModGuard: CanActivateFn = () => {
   const router = inject(Router);
   return session.canModerate() ? true : router.parseUrl(OWNCAST_FORBIDDEN);
 };
+
+/**
+ * The console's landing view — where a bare /owncast sends this session. The
+ * first child view the session's role can actually open, in nav order:
+ *
+ *   stream      when canStream   (ROLE_OWNCAST)
+ *   grants      when canManage   (ADMIN | SUPERADMIN)
+ *   moderation  when canModerate (MOD | ADMIN | SUPERADMIN)
+ *   forbidden   when none of the above applies
+ *
+ * The landing used to be a static redirect to 'stream'. canStream is the bare
+ * 'owncast' role and admin/superadmin do not imply it, so an admin, a
+ * superadmin or the mesh operator without that role who clicked Owncast was
+ * sent to stream, denied by owncastStreamGuard, and shown "You don't have
+ * access to this view" although they can open grants and moderation.
+ *
+ * Returns a path RELATIVE to the console mount, like the old static redirect,
+ * so it lands under whatever path the host mounts the remote at (/owncast).
+ */
+export type OwncastLandingView = 'stream' | 'grants' | 'moderation' | 'forbidden';
+
+export function owncastLandingView(session: Pick<SessionService, 'canStream' | 'canManage' | 'canModerate'>): OwncastLandingView {
+  if (session.canStream()) return 'stream';
+  if (session.canManage()) return 'grants';
+  if (session.canModerate()) return 'moderation';
+  return 'forbidden';
+}
+
+/** The '' child's redirectTo: run in an injection context by the router on
+ *  every navigation to the bare console path, so it reads the CURRENT session. */
+export const owncastLandingRedirect: RedirectFunction = () => owncastLandingView(inject(SessionService));

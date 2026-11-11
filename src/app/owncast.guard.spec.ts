@@ -4,6 +4,7 @@ import {
   owncastStreamGuard,
   owncastManageGuard,
   owncastModGuard,
+  owncastLandingView,
   OWNCAST_FORBIDDEN,
 } from './owncast.guard';
 import { SessionService } from './session.service';
@@ -76,6 +77,27 @@ describe('owncast guards (per-view role gating)', () => {
       const r = run(owncastModGuard) as UrlTree;
       expect((r as unknown as { url: string }).url).toBe('/owncast/forbidden');
       expect(parseUrlSpy).toHaveBeenCalledWith('/owncast/forbidden');
+    });
+  });
+
+  describe('owncastLandingView (where a bare /owncast lands)', () => {
+    function caps(stream: boolean, manage: boolean, moderate: boolean) {
+      return { canStream: () => stream, canManage: () => manage, canModerate: () => moderate } as unknown as Caps;
+    }
+
+    it('a streamer lands on stream, whatever else they hold', () => {
+      expect(owncastLandingView(caps(true, false, false))).toBe('stream');
+      expect(owncastLandingView(caps(true, true, true))).toBe('stream');
+    });
+    it('an admin/superadmin WITHOUT the streamer role lands on grants (not stream → forbidden)', () => {
+      expect(owncastLandingView(caps(false, true, true))).toBe('grants');
+      expect(owncastLandingView(caps(false, true, false))).toBe('grants');
+    });
+    it('a mod without the streamer role lands on moderation', () => {
+      expect(owncastLandingView(caps(false, false, true))).toBe('moderation');
+    });
+    it('a session that can open none of the views lands on forbidden directly', () => {
+      expect(owncastLandingView(caps(false, false, false))).toBe('forbidden');
     });
   });
 });

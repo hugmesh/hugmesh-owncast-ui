@@ -5,7 +5,7 @@ import { OwncastGrantsComponent } from './owncast-grants.component';
 import { OwncastModerationComponent } from './owncast-moderation.component';
 import { OwncastForbiddenComponent } from './owncast-forbidden.component';
 import { AvatarCamComponent } from './avatar-cam/avatar-cam.component';
-import { owncastStreamGuard, owncastManageGuard, owncastModGuard } from './owncast.guard';
+import { owncastStreamGuard, owncastManageGuard, owncastModGuard, owncastLandingRedirect } from './owncast.guard';
 
 /**
  * The exposed `./Owncast` module — mounted by the hugmesh.net host at the
@@ -18,7 +18,12 @@ import { owncastStreamGuard, owncastManageGuard, owncastModGuard } from './ownca
  * and a SUPERADMIN sees everything.
  *
  * View → role gate (mirrors hugmesh-owncast-bff-api):
- *   ''             OwncastConsole     — shell + role-aware nav (no extra gate beyond /owncast)
+ *   ''             OwncastConsole     — shell + role-aware nav (no extra gate beyond /owncast);
+ *                                       its bare path redirects to the FIRST view the role
+ *                                       can open: stream, else grants, else moderation, else
+ *                                       forbidden (owncastLandingRedirect). NOT a static
+ *                                       'stream': admin/superadmin do not imply the owncast
+ *                                       role, so that sent them to the forbidden screen.
  *   stream         OwncastStream      — "My Stream" (owncastStreamGuard: ROLE_OWNCAST)
  *   grants         OwncastGrants      — Broadcast Grants (owncastManageGuard: ADMIN|SUPERADMIN)
  *   moderation     OwncastModeration  — moderation view (owncastModGuard: MOD|ADMIN|SUPERADMIN)
@@ -33,7 +38,7 @@ export const OWNCAST_ROUTES: Routes = [
     path: '',
     component: OwncastConsoleComponent,
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'stream' },
+      { path: '', pathMatch: 'full', redirectTo: owncastLandingRedirect },
       { path: 'stream', component: OwncastStreamComponent, canActivate: [owncastStreamGuard] },
       // The avatar cam is a streamer's tool, gated exactly like My Stream.
       { path: 'avatar-cam', component: AvatarCamComponent, canActivate: [owncastStreamGuard] },
