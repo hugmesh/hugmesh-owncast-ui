@@ -25,10 +25,11 @@ interface OwncastNavItem {
  *   Moderation (moderation) — shown to MODERATE (mod|admin|superadmin).
  * So a plain STREAMER sees only My Stream; a MOD additionally sees Moderation;
  * an ADMIN additionally sees Broadcast grants; a SUPERADMIN sees everything.
- * (The host already gates the whole /owncast mount on ROLE_OWNCAST before this
- * component is ever reached, so canStream() — itself just ROLE_OWNCAST — is
- * always true here in practice; the per-view guards below are still enforced
- * as defence-in-depth and are what the bff itself checks.)
+ * (canStream() — itself just ROLE_OWNCAST — is NOT always true here: admin and
+ * superadmin sessions reach the /owncast mount without the bare 'owncast' role,
+ * which is why the bare /owncast landing picks the first view the role can open
+ * (owncastLandingRedirect) instead of always 'stream'. The per-view guards are
+ * enforced as defence-in-depth; the bff itself is authoritative.)
  *
  * a11y: <nav role="menubar"> with roving tabindex + Arrow/Home/End keyboard
  * navigation; routerLinkActive marks the current view aria-current="page"; every
