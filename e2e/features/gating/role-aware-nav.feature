@@ -9,7 +9,8 @@
 # This is the UI half of the feature-gating story: when a role can't use a part
 # of the optional owncast service, the console never offers it — and a user with
 # no owncast access reaches the mount but sees nothing actionable and is bounced
-# to the in-remote forbidden screen by the default route guard.
+# to the in-remote forbidden screen by the default route (which sends every
+# other role to the first view it can open: stream, else grants, else moderation).
 #
 # @cluster — ships dark; config filters `not @cluster`.
 @cluster @owncast-ui @user-situational
